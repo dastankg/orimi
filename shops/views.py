@@ -7,7 +7,7 @@ from shops.models import Telephone
 from shops.serializers import (
     OwnerTelephoneChatIdSerializer,
     ShopPostSerializer,
-    ShopSerializer,
+    ShopSerializer, TelephoneUpdateSerializer, TelephoneSerializer,
 )
 
 
@@ -50,3 +50,19 @@ class ShopByPhoneAPIView(APIView):
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+class TelephoneGetAPIView(APIView):
+    def get(self, request, phone_number):
+        telephone = get_object_or_404(Telephone, number=phone_number)
+        serializer = TelephoneSerializer(telephone)
+        return Response(serializer.data)
+
+class TelephoneUpdateAPIView(APIView):
+    def patch(self, request, pk):
+        telephone = get_object_or_404(Telephone, pk=pk)
+        serializer = TelephoneUpdateSerializer(telephone, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Shop, ShopPost
+from .models import Shop, ShopPost, Telephone
 from PIL import Image
 import io
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -56,3 +56,9 @@ class ShopPostSerializer(serializers.ModelSerializer):
                 "Обе координаты (latitude и longitude) должны быть указаны или обе отсутствовать"
             )
         return data
+
+
+class OwnerTelephoneChatIdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Telephone
+        fields = ["chat_id"]

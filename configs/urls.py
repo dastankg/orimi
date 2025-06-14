@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path
-from shops.views import ShopPostCreateAPIView
+from shops.views import ShopPostCreateAPIView, OwnerTelephoneViewSet
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -9,4 +9,5 @@ urlpatterns = [
         ShopPostCreateAPIView.as_view(),
         name="shop-post-create",
     ),
+    path("api/telephones/", OwnerTelephoneViewSet.as_view({'get':'list'}), name="telephones"),
 ]

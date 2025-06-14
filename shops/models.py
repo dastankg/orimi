@@ -97,3 +97,7 @@ class ShopPost(models.Model):
 
     def __str__(self):
         return f"Изображение для {self.shop.shop_name} ({self.id})"
+
+    class Meta:
+        verbose_name = _("ShelfPost")
+        verbose_name_plural = _("ShelfPosts")

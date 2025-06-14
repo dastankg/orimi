@@ -79,3 +79,15 @@ class OwnerTelephoneChatIdSerializer(serializers.ModelSerializer):
     class Meta:
         model = Telephone
         fields = ["chat_id"]
+
+class TelephoneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Telephone
+        fields = ["id", "shop", "number", "is_owner", "chat_id"]
+        read_only_fields = ["id"]
+
+class TelephoneUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Telephone
+        fields = ["id", "number", "chat_id"]
+        read_only_fields = ["id"]

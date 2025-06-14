@@ -22,7 +22,6 @@ services:
       - "8000:8000"
     depends_on:
       - db
-      - redis
     volumes:
       - ./media:/app/media
       - ./static:/app/static

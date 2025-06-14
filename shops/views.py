@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from shops.serializers import ShopPostSerializer
 
-class ShopPostCreateAPIView(APIView):
 
+class ShopPostCreateAPIView(APIView):
     def post(self, request):
         serializer = ShopPostSerializer(data=request.data)
         if serializer.is_valid():

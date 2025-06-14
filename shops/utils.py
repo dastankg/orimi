@@ -1,0 +1,102 @@
+import datetime
+from time import localtime
+
+from django import forms
+from django.contrib import admin
+from django.http import HttpResponse
+from django.shortcuts import render
+
+from shops.models import ShopPost
+
+
+class DateRangeRegionForm(forms.Form):
+    start_date = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date", "name": "start_date"}),
+        required=False,
+        label="С даты (День/Месяц/Год)",
+    )
+    end_date = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date", "name": "end_date"}),
+        required=False,
+        label="По дату (День/Месяц/Год)",
+    )
+    region = forms.CharField(
+        widget=forms.TextInput(attrs={"name": "region"}),
+        required=False,
+        label="Регион",
+    )
+
+
+def export_posts_to_excel(modeladmin, request, queryset):
+    start_date = request.POST.get("start_date")
+    end_date = request.POST.get("end_date")
+    region = request.POST.get("region")
+
+    if "apply" not in request.POST:
+        form = DateRangeRegionForm()
+        context = {
+            "queryset": queryset,
+            "form": form,
+            "action_checkbox_name": admin.helpers.ACTION_CHECKBOX_NAME,
+        }
+        return render(request, "export_date_range.html", context)
+
+    if start_date:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    if end_date:
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").replace(
+            hour=23, minute=59, second=59
+        )
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = 'attachment; filename="posts.xlsx"'
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Posts"
+
+    columns = [
+        "ID",
+        "Магазин",
+        "Изображение",
+        "Адрес",
+        "Адрес магазина",
+        "Регион",
+        "Дата",
+        "Время",
+    ]
+    ws.append(columns)
+
+    if region:
+        queryset = queryset.filter(region=region)
+
+    for shop in queryset:
+        posts = ShopPost.objects.filter(shop=shop)
+
+        if start_date:
+            posts = posts.filter(created__gte=start_date)
+        if end_date:
+            posts = posts.filter(created__lte=end_date)
+
+        for post in posts:
+            local_created = localtime(post.created)
+            ws.append(
+                [
+                    post.id,
+                    shop.shop_name,
+                    f"http://139.59.2.151:8000/media/{post.image}",
+                    post.address,
+                    shop.address,
+                    shop.region,
+                    local_created.strftime("%Y-%m-%d"),
+                    local_created.strftime("%H:%M:%S"),
+                ]
+            )
+
+        if posts:
+            ws.append([])
+
+    wb.save(response)
+    return response

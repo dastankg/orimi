@@ -21,7 +21,7 @@ class TelephoneInline(admin.TabularInline):
 class PostInline(admin.TabularInline):
     model = ShopPost
     extra = 1
-    fields = ("post_id", "created", "address", "image_preview")
+    fields = ("post_id", "created", "address", "image_preview", "post_type")
     readonly_fields = ("post_id", "created", "image_preview")
     ordering = ("-created",)
 

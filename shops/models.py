@@ -53,6 +53,17 @@ class ShopPost(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     address = models.CharField(max_length=255, null=True, blank=True)
+    post_type = models.CharField(
+        max_length=100,
+        choices=[
+            ("ТМ до", "ТМ до"),
+            ("ТМ после", "ТМ после"),
+            ("ДПМ", "ДПМ"),
+        ],
+        blank=True,
+        null=True,
+        default="ТМ до",
+    )
     created = models.DateTimeField(auto_now_add=True)
 
     def delete(self, *args, **kwargs):

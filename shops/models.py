@@ -56,9 +56,9 @@ class ShopPost(models.Model):
     post_type = models.CharField(
         max_length=100,
         choices=[
-            ("ТМ до", "ТМ до"),
-            ("ТМ после", "ТМ после"),
-            ("ДПМ", "ДПМ"),
+            ("Кофе", "Кофе"),
+            ("Чай", "Чай"),
+            ("3в1", "3в1"),
         ],
         blank=True,
         null=True,

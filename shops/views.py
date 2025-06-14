@@ -1,9 +1,14 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status, viewsets
+from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from shops.models import Telephone
-from shops.serializers import ShopPostSerializer, OwnerTelephoneChatIdSerializer
+from shops.serializers import (
+    OwnerTelephoneChatIdSerializer,
+    ShopPostSerializer,
+    ShopSerializer,
+)
 
 
 class ShopPostCreateAPIView(APIView):
@@ -19,7 +24,29 @@ class OwnerTelephoneViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = OwnerTelephoneChatIdSerializer
 
     def get_queryset(self):
-        return (
-            Telephone.objects.filter(is_owner=True)
-            .exclude(chat_id__isnull=True)
-        )
+        return Telephone.objects.filter(is_owner=True).exclude(chat_id__isnull=True)
+
+
+class ShopByPhoneAPIView(APIView):
+    def get(self, request, phone_number):
+        try:
+            telephone = get_object_or_404(Telephone, number=phone_number)
+            shop = telephone.shop
+
+            shop_data = ShopSerializer(shop).data
+            shop_data["is_owner"] = telephone.is_owner
+            shop_data["phone_number"] = telephone.number
+            shop_data["chat_id"] = telephone.chat_id
+
+            return Response(
+                shop_data, status=status.HTTP_200_OK
+            )
+
+        except Telephone.DoesNotExist:
+            return Response(
+                {
+                    "success": False,
+                    "error": "Магазин с таким номером телефона не найден",
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )

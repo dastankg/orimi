@@ -16,3 +16,11 @@ dependencies = [
     "requests>=2.32.4",
     "whitenoise>=6.9.0",
 ]
+
+[tool.ruff]
+line-length = 92
+target-version = "py312"
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+[tool.ruff.lint.isort]
+known-first-party = ["orimi_shelf"]

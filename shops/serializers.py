@@ -1,8 +1,24 @@
-from rest_framework import serializers
-from .models import Shop, ShopPost, Telephone
-from PIL import Image
 import io
+
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
+from rest_framework import serializers
+
+from .models import Shop, ShopPost, Telephone
+
+
+class ShopSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Shop
+        fields = [
+            "id",
+            "shop_name",
+            "owner_name",
+            "manager_name",
+            "address",
+            "region",
+            "description",
+        ]
 
 
 class ShopPostSerializer(serializers.ModelSerializer):
@@ -53,7 +69,8 @@ class ShopPostSerializer(serializers.ModelSerializer):
             data.get("latitude") is None and data.get("longitude") is not None
         ):
             raise serializers.ValidationError(
-                "Обе координаты (latitude и longitude) должны быть указаны или обе отсутствовать"
+                "Обе координаты (latitude и longitude) должны быть "
+                "указаны или обе отсутствовать"
             )
         return data
 

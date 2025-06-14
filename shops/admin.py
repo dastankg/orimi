@@ -1,7 +1,8 @@
-from django.contrib import admin
-from shops.models import ShopPost, Telephone, Shop
-from django.utils.safestring import mark_safe
 from django import forms
+from django.contrib import admin
+from django.utils.safestring import mark_safe
+
+from shops.models import Shop, ShopPost, Telephone
 
 
 @admin.register(ShopPost)

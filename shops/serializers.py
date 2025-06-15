@@ -4,7 +4,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
 from rest_framework import serializers
 
-from .models import Shop, ShopPost, Telephone
+from .models import Report, Shop, ShopPost, Telephone
 
 
 class ShopSerializer(serializers.ModelSerializer):
@@ -21,10 +21,15 @@ class ShopSerializer(serializers.ModelSerializer):
         ]
 
 
+class ReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Report
+        fields = ["id", "shop", "answer", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
 class ShopPostSerializer(serializers.ModelSerializer):
-    shop_id = serializers.PrimaryKeyRelatedField(
-        queryset=Shop.objects.all(), source="shop"
-    )
+    shop_id = serializers.PrimaryKeyRelatedField(queryset=Shop.objects.all(), source="shop")
     image = serializers.ImageField(max_length=None, use_url=True)
 
     class Meta:
@@ -35,6 +40,7 @@ class ShopPostSerializer(serializers.ModelSerializer):
             "image",
             "latitude",
             "longitude",
+            "post_type",
             "address",
             "created",
         ]
@@ -80,11 +86,13 @@ class OwnerTelephoneChatIdSerializer(serializers.ModelSerializer):
         model = Telephone
         fields = ["chat_id"]
 
+
 class TelephoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Telephone
         fields = ["id", "shop", "number", "is_owner", "chat_id"]
         read_only_fields = ["id"]
+
 
 class TelephoneUpdateSerializer(serializers.ModelSerializer):
     class Meta:

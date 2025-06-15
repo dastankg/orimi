@@ -14,7 +14,6 @@ services:
       - .env
 
 
-
   web:
     build: .
     container_name: imagebot-web
@@ -34,9 +33,6 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
-      REDIS_URL: ${REDIS_URL}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
     env_file:
       - .env
 

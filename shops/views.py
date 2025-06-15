@@ -6,14 +6,26 @@ from rest_framework.views import APIView
 from shops.models import Telephone
 from shops.serializers import (
     OwnerTelephoneChatIdSerializer,
+    ReportSerializer,
     ShopPostSerializer,
-    ShopSerializer, TelephoneUpdateSerializer, TelephoneSerializer,
+    ShopSerializer,
+    TelephoneSerializer,
+    TelephoneUpdateSerializer,
 )
 
 
 class ShopPostCreateAPIView(APIView):
     def post(self, request):
         serializer = ShopPostSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ReportCreateAPIView(APIView):
+    def post(self, request):
+        serializer = ReportSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -38,9 +50,7 @@ class ShopByPhoneAPIView(APIView):
             shop_data["phone_number"] = telephone.number
             shop_data["chat_id"] = telephone.chat_id
 
-            return Response(
-                shop_data, status=status.HTTP_200_OK
-            )
+            return Response(shop_data, status=status.HTTP_200_OK)
 
         except Telephone.DoesNotExist:
             return Response(
@@ -51,11 +61,13 @@ class ShopByPhoneAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+
 class TelephoneGetAPIView(APIView):
     def get(self, request, phone_number):
         telephone = get_object_or_404(Telephone, number=phone_number)
         serializer = TelephoneSerializer(telephone)
         return Response(serializer.data)
+
 
 class TelephoneUpdateAPIView(APIView):
     def patch(self, request, pk):
@@ -65,4 +77,3 @@ class TelephoneUpdateAPIView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-

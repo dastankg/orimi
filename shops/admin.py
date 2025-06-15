@@ -2,7 +2,8 @@ from django import forms
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from shops.models import Shop, ShopPost, Telephone
+from shops.models import Report, Shop, ShopPost, Telephone
+from shops.utils import export_posts_to_excel, export_reports_to_excel
 
 
 @admin.register(ShopPost)
@@ -49,8 +50,24 @@ class ShopAdmin(admin.ModelAdmin):
     search_fields = ("shop_name", "owner_name")
     list_filter = ("shop_name",)
     inlines = [TelephoneInline, PostInline]
+    actions = [export_posts_to_excel, export_reports_to_excel]
 
     def get_telephones(self, obj):
         return ", ".join(t.number for t in obj.telephones.all())
 
     get_telephones.short_description = "Telephones"
+
+
+@admin.register(Telephone)
+class TelephoneAdmin(admin.ModelAdmin):
+    list_display = ("number", "shop", "is_owner", "chat_id")
+    list_filter = ("is_owner", "shop")
+    search_fields = ("number", "shop__shop_name")
+    raw_id_fields = ("shop",)
+
+
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ("id", "shop", "answer", "created_at")
+    list_filter = ("created_at", "shop")
+    actions = [export_reports_to_excel]

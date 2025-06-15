@@ -98,12 +98,13 @@ def export_posts_to_excel(modeladmin, request, queryset):
 
         for post in posts:
             local_created = localtime(post.created)
+            print(post.image)
             ws.append(
                 [
                     post.id,
                     shop.shop_name,
                     post.post_type,
-                    f"http://{os.getenv('url')}/media/{post.image}",
+                    f"{os.getenv('URL')}/{post.image}",
                     post.address,
                     shop.address,
                     shop.region,

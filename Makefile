@@ -6,6 +6,10 @@ HELP_FUN = \
     print"$$_:\n", map"  $$_->[0]".(" "x(20-length($$_->[0])))."$$_->[1]\n",\
     @{$$help{$$_}},"\n" for keys %help;
 
+env:  ##@Environment Create .env file with variables
+	@$(eval SHELL:=/bin/bash)
+	@cp env_example .env
+
 help: ##@Help Show this help
 	@echo -e "Usage: make [target] ...\n"
 	@perl -e '$(HELP_FUN)' $(MAKEFILE_LIST)

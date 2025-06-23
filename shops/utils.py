@@ -104,7 +104,7 @@ def export_posts_to_excel(modeladmin, request, queryset):
                     post.id,
                     shop.shop_name,
                     post.post_type,
-                    f"{os.getenv('URL')}/{post.image}",
+                    f"{os.getenv('IMAGE_URL')}/{post.image}",
                     post.address,
                     shop.address,
                     shop.region,

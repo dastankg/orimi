@@ -20,8 +20,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "rest_framework",
+
     "shops",
+
 ]
 
 MIDDLEWARE = [
@@ -56,14 +59,15 @@ WSGI_APPLICATION = "configs.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": os.getenv("DB_ENGINE"),
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT"),
+        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.getenv("DB_NAME", BASE_DIR / "db.sqlite3"),
+        "USER": os.getenv("DB_USER", ""),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", ""),
+        "PORT": os.getenv("DB_PORT", ""),
     }
 }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -82,12 +86,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 LANGUAGE_CODE = "ru-RU"
-
 TIME_ZONE = "Asia/Bishkek"
-
 USE_I18N = True
-
 USE_TZ = True
+
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
@@ -99,14 +101,16 @@ AWS_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY")
 AWS_S3_REGION_NAME = "ru-1"
 AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.timeweb.cloud"
-
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": "max-age=86400",
 }
-
 AWS_DEFAULT_ACL = "public-read"
 AWS_QUERYSTRING_AUTH = False
 AWS_S3_FILE_OVERWRITE = False
+AWS_S3_SIGNATURE_VERSION = "s3"
+AWS_S3_ADDRESSING_STYLE = "virtual"
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+
 
 STORAGES = {
     "default": {
@@ -117,9 +121,7 @@ STORAGES = {
     },
 }
 
-AWS_S3_SIGNATURE_VERSION = "s3"
-AWS_S3_ADDRESSING_STYLE = "virtual"
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [

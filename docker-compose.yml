@@ -21,7 +21,7 @@ services:
       - db
     volumes:
       - ./media:/app/media
-      - ./static:/app/static
+      - ./staticfiles:/app/staticfiles
     environment:
       DJANGO_SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG}
@@ -45,7 +45,7 @@ services:
       - ./static:/static
       - ./media:/media
       - /etc/letsencrypt:/etc/letsencrypt
-      - /var/lib/letsencrypt:/var/lib/letsencrypt
+
     depends_on:
       - web
 volumes:

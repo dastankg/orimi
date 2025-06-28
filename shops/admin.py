@@ -29,7 +29,7 @@ class PostInline(admin.TabularInline):
 
     def post_id(self, obj):
         if obj.id:
-            url = f"/admin/post/post/{obj.id}/change/"
+            url = f"/admin/shops/shoppost/{obj.id}/change/"
             return mark_safe(f'<a href="{url}">{obj.id}</a>')
         return "-"
 

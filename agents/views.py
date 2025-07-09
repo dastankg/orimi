@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from geopy.distance import geodesic
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
@@ -29,6 +29,7 @@ class AgentDetailView(APIView):
             )
 
 
+
 class CheckAddressView(APIView):
     def get(self, request, longitude, latitude, store):
         store = get_object_or_404(Store, name=store)
@@ -37,16 +38,23 @@ class CheckAddressView(APIView):
             latitude = float(latitude)
             longitude = float(longitude)
         except ValueError:
-            return Response({"success": False, "error": "Invalid coordinates"})
+            return Response({"success": False, "error": "Invalid coordinates"}, status=400)
 
-        epsilon = 0.0001
-        if (
-            abs(store.latitude - latitude) > epsilon
-            or abs(store.longitude - longitude) > epsilon
-        ):
+        if store.latitude is None or store.longitude is None:
+            return Response({"success": False, "error": "Store coordinates not set"}, status=400)
+
+        # Расчёт расстояния в метрах
+        user_coords = (latitude, longitude)
+        store_coords = (store.latitude, store.longitude)
+        distance = geodesic(user_coords, store_coords).meters
+
+        print(f"Distance = {distance:.2f} meters")
+
+        if distance > 100:
             return Response({"success": False})
 
         return Response({"success": True})
+
 
 
 class AgentScheduleView(APIView):

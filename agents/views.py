@@ -39,10 +39,7 @@ class CheckAddressView(APIView):
         except ValueError:
             return Response({"success": False, "error": "Invalid coordinates"})
 
-        # epsilon = 0.00002
-        epsilon = 10
-        print(abs(store.latitude - latitude))
-        print(abs(store.longitude - longitude))
+        epsilon = 0.0001
         if (
             abs(store.latitude - latitude) > epsilon
             or abs(store.longitude - longitude) > epsilon
@@ -54,7 +51,6 @@ class CheckAddressView(APIView):
 
 class AgentScheduleView(APIView):
     def get(self, request, agent_number):
-        # Убедимся, что номер с "+"
         if not agent_number.startswith("+"):
             agent_number = "+" + agent_number
 
@@ -78,7 +74,6 @@ class AgentScheduleView(APIView):
                 "name": store.name,
                 "latitude": store.latitude,
                 "longitude": store.longitude,
-                # добавь другие поля, если нужно
             }
             for store in stores
         ]

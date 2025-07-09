@@ -29,7 +29,6 @@ class AgentDetailView(APIView):
             )
 
 
-
 class CheckAddressView(APIView):
     def get(self, request, longitude, latitude, store):
         store = get_object_or_404(Store, name=store)
@@ -38,19 +37,17 @@ class CheckAddressView(APIView):
             latitude = float(latitude)
             longitude = float(longitude)
         except ValueError:
-            return Response({"success": False, "error": "Invalid coordinates"}, status=400)
+            return Response({"success": False, "error": "Invalid coordinates"})
 
-        if store.latitude is None or store.longitude is None:
-            return Response({"success": False, "error": "Store coordinates not set"}, status=400)
-
-        # Расчёт расстояния в метрах
-        user_coords = (latitude, longitude)
-        store_coords = (store.latitude, store.longitude)
-        distance = geodesic(user_coords, store_coords).meters
-
-        print(f"Distance = {distance:.2f} meters")
-
-        if distance > 100:
+        epsilon = 0.0003
+        print(store.latitude, store.longtitude)
+        print(latitude, longitude)
+        print(abs(store.latitude - latitude))
+        print(abs(store.longitude - longitude))
+        if (
+            abs(store.latitude - latitude) > epsilon
+            or abs(store.longitude - longitude) > epsilon
+        ):
             return Response({"success": False})
 
         return Response({"success": True})

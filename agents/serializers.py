@@ -66,3 +66,11 @@ class PhotoPostSerializer(serializers.ModelSerializer):
                 "Обе координаты (latitude и longitude) должны быть указаны или обе отсутствовать"
             )
         return data
+
+    def validate_post_type(self, value):
+        valid_types = [choice[0] for choice in PhotoPost.POST_TYPE_CHOICES]
+        if value not in valid_types:
+            raise serializers.ValidationError(
+                f"Недопустимый тип поста. Доступные: {valid_types}"
+            )
+        return value

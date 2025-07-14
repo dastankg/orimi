@@ -361,11 +361,11 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
     header_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
 
     dmp_orimi_brands = ["Гринф", "Tess", "ЖН", "Шах", "Jardin", "Жокей"]
-    dmp_competitor_brands = ["Бета", "Пиала", "Ахмад", "Jacobs", "Nestlе"]
+    dmp_competitor_brands = ["Beta", "Пиала", "Ахмад", "Jacobs", "Nestle"]
     all_dmp_brands = dmp_orimi_brands + dmp_competitor_brands
 
     brand_variations = {
-        "Бета": ["бета", "beta", "Beta", "BETA"],
+        "Beta": ["бета", "beta", "Beta", "BETA"],
         "Пиала": ["пиала", "piala", "Piala", "PIALA"],
         "Ахмад": ["ахмад", "ahmad", "Ahmad", "AHMAD"],
         "Гринф": ["гринф", "greenf", "Greenf", "GREENF", "grinf", "Grinf"],
@@ -375,8 +375,11 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
         "Jardin": ["jardin", "Jardin", "JARDIN", "жардин", "Жардин"],
         "Жокей": ["жокей", "jockey", "Jockey", "JOCKEY"],
         "Jacobs": ["jacobs", "Jacobs", "JACOBS", "якобс", "Якобс"],
-        "Nestlе": ["nestle", "Nestle", "NESTLE", "нестле", "Нестле"],
+        "Nestle": ["nestle", "Nestle", "NESTLE", "нестле", "Нестле"],
     }
+
+    def normalize_text(text):
+        return (text or "").strip().lower()
 
     headers_row1 = [
         ("Дата", 1, 1),
@@ -483,7 +486,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             for post in posts_data:
                 post_type = post["post_type"]
                 store_id = post["store"]
-                dmp_type = post["dmp_type"] or ""
+                dmp_type_normalized = normalize_text(post["dmp_type"])  # Нормализация текста
                 dmp_count = post["dmp_count"] or 0
 
                 if "РМП_чай" in post_type:
@@ -498,7 +501,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                     for brand in dmp_orimi_brands:
                         brand_variants = brand_variations.get(brand, [brand.lower()])
                         for variant in brand_variants:
-                            if variant in dmp_type.lower():
+                            if normalize_text(variant) == dmp_type_normalized:  # Точное сравнение
                                 brand_sums[brand] += dmp_count
                                 break
                 elif "ДМП_конкурент" in post_type:
@@ -507,7 +510,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                     for brand in dmp_competitor_brands:
                         brand_variants = brand_variations.get(brand, [brand.lower()])
                         for variant in brand_variants:
-                            if variant in dmp_type.lower():
+                            if normalize_text(variant) == dmp_type_normalized:  # Точное сравнение
                                 brand_sums[brand] += dmp_count
                                 break
 
@@ -538,7 +541,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             ws.cell(row=row, column=11, value=len(rmp_coffee_stores))
             ws.cell(row=row, column=12, value=rmp_coffee_photos)
             ws.cell(row=row, column=13, value=len(dmp_orimi_stores))
-            ws.cell(row=row, column=14, value=dmp_orimi_sum)  # Сумма для ДМП ОРИМИ
+            ws.cell(row=row, column=14, value=dmp_orimi_sum)
 
             col = 15
             for brand in all_dmp_brands:
@@ -595,3 +598,4 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
 
 
 export_plan_visits_to_excel.short_description = "Выгрузить план визитов в Excel"
+

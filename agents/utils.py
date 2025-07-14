@@ -197,12 +197,12 @@ def export_to_excel(modeladmin, request, queryset):
                         ws.cell(
                             row=data_row,
                             column=4,
-                            value=first_post.created.strftime("%H:%M"),
+                            value=first_created.strftime("%H:%M"),
                         )
                         ws.cell(
                             row=data_row,
                             column=5,
-                            value=last_post.created.strftime("%H:%M"),
+                            value=last_created.strftime("%H:%M"),
                         )
 
                         time_diff = last_post.created - first_post.created

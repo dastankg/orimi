@@ -7,7 +7,6 @@ from openpyxl.utils import get_column_letter
 
 from .models import DailyPlan, PhotoPost
 
-
 def export_to_excel(modeladmin, request, queryset):
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -18,7 +17,6 @@ def export_to_excel(modeladmin, request, queryset):
 
     selected_agents = queryset
 
-    # Стили
     header_font = Font(bold=True, size=10)
     center_align = Alignment(horizontal="center", vertical="center")
     thin_border = Border(
@@ -162,9 +160,26 @@ def export_to_excel(modeladmin, request, queryset):
                     if type_posts:
                         rmp_photos[post_type] = type_posts
 
-                max_photos = (
-                    max(len(photos) for photos in rmp_photos.values()) if rmp_photos else 1
+                dmp_orimi_photos = {}
+                dmp_orimi_posts = [
+                    p for p in posts_list if p.post_type == "ДМП_ОРИМИ КР" and p.image
+                ]
+                for brand in dmp_orimi_brands:
+                    brand_variants = brand_mapping.get(brand.lower(), [brand.lower()])
+                    brand_posts = []
+                    for post in dmp_orimi_posts:
+                        if check_brand_match(post.dmp_type, brand, brand_variants):
+                            brand_posts.append(post)
+                    if brand_posts:
+                        dmp_orimi_photos[brand] = brand_posts
+
+                max_rmp_photos = (
+                    max(len(photos) for photos in rmp_photos.values()) if rmp_photos else 0
                 )
+                max_dmp_photos = (
+                    max(len(photos) for photos in dmp_orimi_photos.values()) if dmp_orimi_photos else 0
+                )
+                max_photos = max(max_rmp_photos, max_dmp_photos, 1)
 
                 for photo_index in range(max_photos):
                     if photo_index == 0:
@@ -177,7 +192,8 @@ def export_to_excel(modeladmin, request, queryset):
 
                         first_post = min(posts_list, key=lambda x: x.created)
                         last_post = max(posts_list, key=lambda x: x.created)
-
+                        first_created = first_post.created + timedelta(hours=6)
+                        last_created = last_post.created + timedelta(hours=6)
                         ws.cell(
                             row=data_row,
                             column=4,
@@ -216,36 +232,24 @@ def export_to_excel(modeladmin, request, queryset):
                             ws.cell(row=data_row, column=col, value="")
                         col += 1
 
-                    if photo_index == 0:
-                        col = 11
-
-                        dmp_orimi_posts = [
-                            p for p in posts_list if p.post_type == "ДМП_ОРИМИ КР"
-                        ]
-                        for brand in dmp_orimi_brands:
-                            brand_variants = brand_mapping.get(
-                                brand.lower(), [brand.lower()]
+                    col = 11
+                    for brand in dmp_orimi_brands:
+                        if brand in dmp_orimi_photos and photo_index < len(
+                            dmp_orimi_photos[brand]
+                        ):
+                            post = dmp_orimi_photos[brand][photo_index]
+                            image_url = request.build_absolute_uri(post.image.url)
+                            ws.cell(
+                                row=data_row,
+                                column=col,
+                                value=f'=HYPERLINK("{image_url}","фото")',
                             )
+                            ws.cell(row=data_row, column=col).font = link_font
+                        else:
+                            ws.cell(row=data_row, column=col, value="")
+                        col += 1
 
-                            brand_posts = []
-                            for post in dmp_orimi_posts:
-                                if check_brand_match(post.dmp_type, brand, brand_variants):
-                                    brand_posts.append(post)
-
-                            if brand_posts and brand_posts[0].image:
-                                image_url = request.build_absolute_uri(
-                                    brand_posts[0].image.url
-                                )
-                                ws.cell(
-                                    row=data_row,
-                                    column=col,
-                                    value=f'=HYPERLINK("{image_url}","фото")',
-                                )
-                                ws.cell(row=data_row, column=col).font = link_font
-                            else:
-                                ws.cell(row=data_row, column=col, value="")
-                            col += 1
-
+                    if photo_index == 0:
                         dmp_competitor_posts = [
                             p for p in posts_list if p.post_type == "ДМП_конкурент"
                         ]
@@ -292,18 +296,17 @@ def export_to_excel(modeladmin, request, queryset):
             cell.alignment = center_align
             cell.border = thin_border
 
-    # Настройка ширины колонок
     column_widths = {
-        1: 12,  # Дата
-        2: 15,  # SNO (Агент)
-        3: 25,  # Магазин
-        4: 15,  # Начало
-        5: 15,  # Конец
-        6: 12,  # Time in outlet
-        7: 15,  # РМП_чай_ДО
-        8: 15,  # РМП_чай_ПОСЛЕ
-        9: 15,  # РМП_кофе_ДО
-        10: 15,  # РМП_кофе_ПОСЛЕ
+        1: 12,
+        2: 15,
+        3: 25,
+        4: 15,
+        5: 15,
+        6: 12,
+        7: 15,
+        8: 15,
+        9: 15,
+        10: 15,
     }
 
     for col_num, width in column_widths.items():
@@ -513,7 +516,6 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             ws.cell(row=row, column=3, value=plan_count)
             ws.cell(row=row, column=4, value=fact_count)
 
-            # Call completion %
             if plan_count > 0:
                 completion_percent = round((fact_count / plan_count) * 100)
                 ws.cell(row=row, column=5, value=f"{completion_percent}%")
@@ -552,22 +554,21 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             cell.alignment = center_align
             cell.border = thin_border
 
-    # Настройка ширины колонок
     column_widths = {
-        "A": 12,  # Дата
-        "B": 20,  # Мерчендайзер
-        "C": 12,  # План визита
-        "D": 12,  # Факт визита
-        "E": 15,  # Call completion %
-        "F": 18,  # Визитов < 30 мин
-        "G": 18,  # Визитов > 30 мин
-        "H": 15,  # Общее время
-        "I": 10,  # РМП чай ТТ
-        "J": 12,  # РМП чай фото
-        "K": 10,  # РМП кофе ТТ
-        "L": 12,  # РМП кофе фото
-        "M": 12,  # ДМП ОРИМИ ТТ
-        "N": 12,  # ДМП ОРИМИ сумма
+        "A": 12,
+        "B": 20,
+        "C": 12,
+        "D": 12,
+        "E": 15,
+        "F": 18,
+        "G": 18,
+        "H": 15,
+        "I": 10,
+        "J": 12,
+        "K": 10,
+        "L": 12,
+        "M": 12,
+        "N": 12,
     }
 
     for col_letter, width in column_widths.items():

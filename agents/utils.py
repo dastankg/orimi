@@ -1,19 +1,56 @@
 from datetime import datetime, timedelta
 
 import openpyxl
+from django import forms
 from django.http import HttpResponse
+from django.shortcuts import render
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-
+from django.contrib import admin
 from .models import DailyPlan, PhotoPost
 
+class DateRangeForm(forms.Form):
+    start_date = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date", "name": "start_date"}),
+        required=False,
+        label="С даты (День/Месяц/Год)",
+    )
+    end_date = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date", "name": "end_date"}),
+        required=False,
+        label="По дату (День/Месяц/Год)",
+    )
+
+
 def export_to_excel(modeladmin, request, queryset):
+    start_date = request.POST.get("start_date")
+    end_date = request.POST.get("end_date")
+
+    if "apply" not in request.POST:
+        form = DateRangeForm()
+        context = {
+            "queryset": queryset,
+            "form": form,
+            "action_checkbox_name": admin.helpers.ACTION_CHECKBOX_NAME,
+        }
+        return render(request, "export_photo_report.html", context)
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Отчет фотопостов"
 
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=6)
+    if start_date and end_date:
+        start_date_parsed = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date_parsed = datetime.strptime(end_date, "%Y-%m-%d")
+    elif start_date:
+        start_date_parsed = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date_parsed = start_date_parsed + timedelta(days=6)
+    elif end_date:
+        end_date_parsed = datetime.strptime(end_date, "%Y-%m-%d")
+        start_date_parsed = end_date_parsed - timedelta(days=6)
+    else:
+        end_date_parsed = datetime.now()
+        start_date_parsed = end_date_parsed - timedelta(days=6)
 
     selected_agents = queryset
 
@@ -108,11 +145,13 @@ def export_to_excel(modeladmin, request, queryset):
 
     data_row = 3
 
+    total_days = (end_date_parsed - start_date_parsed).days + 1
+
     for agent in selected_agents:
         agent_has_data = False
 
-        for day_offset in range(7):
-            current_date = start_date + timedelta(days=day_offset)
+        for day_offset in range(total_days):
+            current_date = start_date_parsed + timedelta(days=day_offset)
             date_str = current_date.strftime("%d.%m.%Y")
 
             day_posts = (
@@ -218,7 +257,7 @@ def export_to_excel(modeladmin, request, queryset):
                         "РМП_кофе_ПОСЛЕ",
                     ]:
                         if post_type in rmp_photos and photo_index < len(
-                            rmp_photos[post_type]
+                                rmp_photos[post_type]
                         ):
                             post = rmp_photos[post_type][photo_index]
                             image_url = request.build_absolute_uri(post.image.url)
@@ -235,7 +274,7 @@ def export_to_excel(modeladmin, request, queryset):
                     col = 11
                     for brand in dmp_orimi_brands:
                         if brand in dmp_orimi_photos and photo_index < len(
-                            dmp_orimi_photos[brand]
+                                dmp_orimi_photos[brand]
                         ):
                             post = dmp_orimi_photos[brand][photo_index]
                             image_url = request.build_absolute_uri(post.image.url)
@@ -290,7 +329,7 @@ def export_to_excel(modeladmin, request, queryset):
             data_row += 1
 
     for row in ws.iter_rows(
-        min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
+            min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
     ):
         for cell in row:
             cell.alignment = center_align
@@ -320,28 +359,53 @@ def export_to_excel(modeladmin, request, queryset):
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
     agent_names = "_".join(
         [agent.agent_name[:10].replace(" ", "_") for agent in selected_agents[:3]]
     )
     if len(selected_agents) > 3:
         agent_names += f"_and_{len(selected_agents) - 3}_more"
 
-    filename = f"photo_report_{agent_names}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    date_suffix = ""
+    if start_date and end_date:
+        date_suffix = f"_{start_date}_to_{end_date}"
+    elif start_date:
+        date_suffix = f"_from_{start_date}"
+    elif end_date:
+        date_suffix = f"_to_{end_date}"
+
+    filename = f"photo_report_{agent_names}{date_suffix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     response["Content-Disposition"] = f"attachment; filename={filename}"
 
     wb.save(response)
 
+    filter_info = ""
+    if start_date or end_date:
+        filter_info = f" (период: {start_date or 'начало'} - {end_date or 'конец'})"
+
     modeladmin.message_user(
-        request, f"Отчет успешно создан для {len(selected_agents)} агент(ов)"
+        request, f"Отчет успешно создан для {len(selected_agents)} агент(ов){filter_info}"
     )
 
     return response
 
 
-export_to_excel.short_description = "Выгрузить отчет в Excel"
+export_to_excel.short_description = "Выгрузить отчет фотопостов в Excel"
 
 
 def export_plan_visits_to_excel(modeladmin, request, queryset):
+    start_date = request.POST.get("start_date")
+    end_date = request.POST.get("end_date")
+
+    if "apply" not in request.POST:
+        form = DateRangeForm()
+        context = {
+            "queryset": queryset,
+            "form": form,
+            "action_checkbox_name": admin.helpers.ACTION_CHECKBOX_NAME,
+        }
+        return render(request, "export_plan_visits.html", context)
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "План визитов"
@@ -447,7 +511,16 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
     row = 3
 
     for agent in selected_agents:
-        daily_plans = DailyPlan.objects.filter(agent=agent).order_by("date")
+        daily_plans = DailyPlan.objects.filter(agent=agent)
+
+        if start_date:
+            start_date_parsed = datetime.strptime(start_date, "%Y-%m-%d").date()
+            daily_plans = daily_plans.filter(date__gte=start_date_parsed)
+        if end_date:
+            end_date_parsed = datetime.strptime(end_date, "%Y-%m-%d").date()
+            daily_plans = daily_plans.filter(date__lte=end_date_parsed)
+
+        daily_plans = daily_plans.order_by("date")
 
         for daily_plan in daily_plans:
             date = daily_plan.date
@@ -502,7 +575,6 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             brand_sums = dict.fromkeys(all_dmp_brands, 0)
             brand_photo_counts = dict.fromkeys(all_dmp_brands, 0)
 
-            print(f"Processing agent: {agent.agent_name}, date: {date}")
 
             for post in posts_data:
                 post_type = post["post_type"]
@@ -510,10 +582,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                 dmp_type = post["dmp_type"]
                 dmp_count = post["dmp_count"] or 0
 
-                # Дополнительная отладка
-                if "ДМП" in post_type:
-                    print(
-                        f"  DEBUG: post_type={post_type}, dmp_type={dmp_type}, dmp_count={dmp_count}, raw_dmp_count={post['dmp_count']}")
+
 
                 if "РМП_чай" in post_type:
                     rmp_tea_stores.add(store_id)
@@ -528,9 +597,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                     brand = get_brand_from_dmp_type(dmp_type)
                     if brand and brand in dmp_orimi_brands:
                         brand_photo_counts[brand] += 1
-                        print(f"  ORIMI - Found brand: {brand}, photo count: 1, dmp_type: {dmp_type}")
-                    else:
-                        print(f"  ORIMI - Brand not found for dmp_type: {dmp_type}")
+
 
                 elif "ДМП_конкурент" in post_type:
                     dmp_competitor_stores.add(store_id)
@@ -541,9 +608,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                     if brand and brand in dmp_competitor_brands:
                         if dmp_count > 0:
                             brand_sums[brand] += dmp_count
-                        print(f"  Competitor - Found brand: {brand}, count: {dmp_count}, dmp_type: {dmp_type}")
-                    else:
-                        print(f"  Competitor - Brand not found for dmp_type: {dmp_type}")
+
 
             ws.cell(row=row, column=1, value=date.strftime("%d.%m"))
             ws.cell(row=row, column=2, value=agent.agent_name)
@@ -576,7 +641,6 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
 
             col = 15
             for brand in all_dmp_brands:
-                # Для брендов ORIMI используем подсчет фото, для конкурентов - dmp_count
                 if brand in dmp_orimi_brands:
                     ws.cell(row=row, column=col, value=brand_photo_counts[brand])
                 else:
@@ -620,13 +684,25 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-    filename = f"plan_visits_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    date_suffix = ""
+    if start_date and end_date:
+        date_suffix = f"_{start_date}_to_{end_date}"
+    elif start_date:
+        date_suffix = f"_from_{start_date}"
+    elif end_date:
+        date_suffix = f"_to_{end_date}"
+
+    filename = f"plan_visits{date_suffix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     response["Content-Disposition"] = f"attachment; filename={filename}"
 
     wb.save(response)
 
+    filter_info = ""
+    if start_date or end_date:
+        filter_info = f" (фильтр: {start_date or 'начало'} - {end_date or 'конец'})"
+
     modeladmin.message_user(
-        request, f"Отчет по плану визитов создан для {len(selected_agents)} агент(ов)"
+        request, f"Отчет по плану визитов создан для {len(selected_agents)} агент(ов){filter_info}"
     )
 
     return response

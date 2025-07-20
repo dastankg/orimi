@@ -131,7 +131,6 @@ class PhotoPost(models.Model):
 
 
 class DailyPlan(models.Model):
-    """Ежедневный план визитов для агента"""
 
     agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="daily_plans")
     date = models.DateField(verbose_name=_("Дата"))
@@ -159,12 +158,10 @@ class DailyPlan(models.Model):
 
     @property
     def completion_rate(self):
-        """Процент выполнения плана"""
         if self.planned_stores_count == 0:
             return 0
         return round((self.visited_stores_count / self.planned_stores_count) * 100, 2)
 
     @property
     def is_completed(self):
-        """План выполнен полностью"""
         return self.visited_stores_count >= self.planned_stores_count

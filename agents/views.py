@@ -44,7 +44,7 @@ class CheckAddressView(APIView):
         store_location = (store.latitude, store.longitude)
         distance_meters = geodesic(user_location, store_location).meters
 
-        if distance_meters > 200:
+        if distance_meters > 250:
             return Response(
                 {
                     "success": False,

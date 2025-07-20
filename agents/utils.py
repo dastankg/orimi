@@ -364,22 +364,40 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
     dmp_competitor_brands = ["Beta", "Пиала", "Ахмад", "Jacobs", "Nestle"]
     all_dmp_brands = dmp_orimi_brands + dmp_competitor_brands
 
-    brand_variations = {
-        "Beta": ["бета", "beta", "Beta", "BETA"],
-        "Пиала": ["пиала", "piala", "Piala", "PIALA"],
-        "Ахмад": ["ахмад", "ahmad", "Ahmad", "AHMAD"],
-        "Гринф": ["гринф", "greenf", "Greenf", "GREENF", "grinf", "Grinf"],
-        "Tess": ["tess", "Tess", "TESS", "тесс", "Тесс"],
-        "ЖН": ["жн", "ЖН", "jn", "JN"],
-        "Шах": ["шах", "shah", "Shah", "SHAH"],
-        "Jardin": ["jardin", "Jardin", "JARDIN", "жардин", "Жардин"],
-        "Жокей": ["жокей", "jockey", "Jockey", "JOCKEY"],
-        "Jacobs": ["jacobs", "Jacobs", "JACOBS", "якобс", "Якобс"],
-        "Nestle": ["nestle", "Nestle", "NESTLE", "нестле", "Нестле"],
-    }
+    def get_brand_from_dmp_type(dmp_type):
+        if not dmp_type:
+            return None
 
-    def normalize_text(text):
-        return (text or "").strip().lower()
+        dmp_type_lower = dmp_type.strip().lower()
+
+        if dmp_type_lower in ["tess", "тесс"]:
+            return "Tess"
+        elif dmp_type_lower in ["гринф", "greenf", "grinf"]:
+            return "Гринф"
+        elif dmp_type_lower in ["жн", "jn"]:
+            return "ЖН"
+        elif dmp_type_lower in ["шах", "shah"]:
+            return "Шах"
+        elif dmp_type_lower in ["jardin", "жардин"]:
+            return "Jardin"
+        elif dmp_type_lower in ["жокей", "jockey"]:
+            return "Жокей"
+        elif dmp_type_lower in ["beta", "бета"]:
+            return "Beta"
+        elif dmp_type_lower in ["пиала", "piala"]:
+            return "Пиала"
+        elif dmp_type_lower in ["ахмад", "ahmad"]:
+            return "Ахмад"
+        elif dmp_type_lower in ["jacobs", "якобс"]:
+            return "Jacobs"
+        elif dmp_type_lower in ["nestle", "нестле"]:
+            return "Nestle"
+
+        for brand in all_dmp_brands:
+            if brand.lower() == dmp_type_lower:
+                return brand
+
+        return None
 
     headers_row1 = [
         ("Дата", 1, 1),
@@ -482,12 +500,20 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             dmp_competitor_sum = 0
 
             brand_sums = dict.fromkeys(all_dmp_brands, 0)
+            brand_photo_counts = dict.fromkeys(all_dmp_brands, 0)
+
+            print(f"Processing agent: {agent.agent_name}, date: {date}")
 
             for post in posts_data:
                 post_type = post["post_type"]
                 store_id = post["store"]
-                dmp_type_normalized = normalize_text(post["dmp_type"])  # Нормализация текста
+                dmp_type = post["dmp_type"]
                 dmp_count = post["dmp_count"] or 0
+
+                # Дополнительная отладка
+                if "ДМП" in post_type:
+                    print(
+                        f"  DEBUG: post_type={post_type}, dmp_type={dmp_type}, dmp_count={dmp_count}, raw_dmp_count={post['dmp_count']}")
 
                 if "РМП_чай" in post_type:
                     rmp_tea_stores.add(store_id)
@@ -497,22 +523,27 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                     rmp_coffee_photos += 1
                 elif "ДМП_ОРИМИ" in post_type:
                     dmp_orimi_stores.add(store_id)
-                    dmp_orimi_sum += dmp_count
-                    for brand in dmp_orimi_brands:
-                        brand_variants = brand_variations.get(brand, [brand.lower()])
-                        for variant in brand_variants:
-                            if normalize_text(variant) == dmp_type_normalized:  # Точное сравнение
-                                brand_sums[brand] += dmp_count
-                                break
+                    dmp_orimi_sum += 1
+
+                    brand = get_brand_from_dmp_type(dmp_type)
+                    if brand and brand in dmp_orimi_brands:
+                        brand_photo_counts[brand] += 1
+                        print(f"  ORIMI - Found brand: {brand}, photo count: 1, dmp_type: {dmp_type}")
+                    else:
+                        print(f"  ORIMI - Brand not found for dmp_type: {dmp_type}")
+
                 elif "ДМП_конкурент" in post_type:
                     dmp_competitor_stores.add(store_id)
-                    dmp_competitor_sum += dmp_count
-                    for brand in dmp_competitor_brands:
-                        brand_variants = brand_variations.get(brand, [brand.lower()])
-                        for variant in brand_variants:
-                            if normalize_text(variant) == dmp_type_normalized:  # Точное сравнение
-                                brand_sums[brand] += dmp_count
-                                break
+                    if dmp_count > 0:
+                        dmp_competitor_sum += dmp_count
+
+                    brand = get_brand_from_dmp_type(dmp_type)
+                    if brand and brand in dmp_competitor_brands:
+                        if dmp_count > 0:
+                            brand_sums[brand] += dmp_count
+                        print(f"  Competitor - Found brand: {brand}, count: {dmp_count}, dmp_type: {dmp_type}")
+                    else:
+                        print(f"  Competitor - Brand not found for dmp_type: {dmp_type}")
 
             ws.cell(row=row, column=1, value=date.strftime("%d.%m"))
             ws.cell(row=row, column=2, value=agent.agent_name)
@@ -545,13 +576,17 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
 
             col = 15
             for brand in all_dmp_brands:
-                ws.cell(row=row, column=col, value=brand_sums[brand])
+                # Для брендов ORIMI используем подсчет фото, для конкурентов - dmp_count
+                if brand in dmp_orimi_brands:
+                    ws.cell(row=row, column=col, value=brand_photo_counts[brand])
+                else:
+                    ws.cell(row=row, column=col, value=brand_sums[brand])
                 col += 1
 
             row += 1
 
     for row in ws.iter_rows(
-        min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
+            min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
     ):
         for cell in row:
             cell.alignment = center_align
@@ -598,4 +633,3 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
 
 
 export_plan_visits_to_excel.short_description = "Выгрузить план визитов в Excel"
-

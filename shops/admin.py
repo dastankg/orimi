@@ -9,9 +9,20 @@ from shops.utils import export_posts_to_excel, export_reports_to_excel
 @admin.register(ShopPost)
 class PostAdmin(admin.ModelAdmin):
     exclude = ("latitude", "longitude")
-    list_display = ("shop", "address", "created")
-    list_filter = ("shop", "created")
-    search_fields = ("shop__shop_name", "address")
+    list_display = ("shop", "post_type", "address", "created", "image_preview")
+    list_filter = ("post_type", "created", "shop__region", "shop__manager_name")
+    search_fields = ("shop__shop_name", "address", "shop__manager_name")
+    date_hierarchy = "created"
+    list_per_page = 30
+    ordering = ("-created",)
+    readonly_fields = ("image_preview",)
+    
+    def image_preview(self, obj):
+        if obj.image:
+            url = obj.image.url if hasattr(obj.image, "url") else f"/media/{obj.image}"
+            return mark_safe(f'<img src="{url}" style="max-height: 50px; max-width: 50px;"/>')
+        return "-"
+    image_preview.short_description = "Превью"
 
 
 class TelephoneInline(admin.TabularInline):
@@ -36,8 +47,9 @@ class PostInline(admin.TabularInline):
     def image_preview(self, obj):
         if obj.image:
             url = obj.image.url if hasattr(obj.image, "url") else f"/media/{obj.image}"
-            return mark_safe(f'<a href="{url}" target="_blank">Посмотреть</a>')
+            return mark_safe(f'<a href="{url}" target="_blank"><img src="{url}" style="max-height: 40px; max-width: 40px;"/></a>')
         return "-"
+    image_preview.short_description = "Превью"
 
 
 class ManyToManyStoreWidget(forms.SelectMultiple):
@@ -46,11 +58,21 @@ class ManyToManyStoreWidget(forms.SelectMultiple):
 
 @admin.register(Shop)
 class ShopAdmin(admin.ModelAdmin):
-    list_display = ("shop_name", "owner_name", "get_telephones", "address", "region")
-    search_fields = ("shop_name", "owner_name")
-    list_filter = ("shop_name",)
+    list_display = ("shop_name", "owner_name", "manager_name", "get_telephones", "address", "region")
+    search_fields = ("shop_name", "owner_name", "manager_name", "address")
+    list_filter = ("region", "manager_name")
+    list_per_page = 25
+    ordering = ("shop_name",)
     inlines = [TelephoneInline, PostInline]
     actions = [export_posts_to_excel, export_reports_to_excel]
+    fieldsets = (
+        ("Основная информация", {
+            "fields": ("shop_name", "description")
+        }),
+        ("Контактная информация", {
+            "fields": ("owner_name", "manager_name", "address", "region")
+        }),
+    )
 
     def get_telephones(self, obj):
         return ", ".join(t.number for t in obj.telephones.all())
@@ -61,13 +83,19 @@ class ShopAdmin(admin.ModelAdmin):
 @admin.register(Telephone)
 class TelephoneAdmin(admin.ModelAdmin):
     list_display = ("number", "shop", "is_owner", "chat_id")
-    list_filter = ("is_owner", "shop")
-    search_fields = ("number", "shop__shop_name")
+    list_filter = ("is_owner", "shop__region", "shop__manager_name")
+    search_fields = ("number", "shop__shop_name", "shop__manager_name")
     raw_id_fields = ("shop",)
+    list_per_page = 30
+    ordering = ("number",)
 
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
     list_display = ("id", "shop", "answer", "created_at")
-    list_filter = ("created_at", "shop")
+    list_filter = ("answer", "created_at", "shop__region", "shop__manager_name")
+    search_fields = ("shop__shop_name", "shop__manager_name")
+    date_hierarchy = "created_at"
+    list_per_page = 30
+    ordering = ("-created_at",)
     actions = [export_reports_to_excel]

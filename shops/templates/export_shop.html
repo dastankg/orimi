@@ -4,7 +4,7 @@
  <form action="" method="post">
    {% csrf_token %}
    {{ form.as_p }}
-   
+
    <ul class="object-tools">
      <li>
        <input type="hidden" name="action" value="export_posts_to_excel" />

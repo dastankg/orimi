@@ -131,7 +131,6 @@ class PhotoPost(models.Model):
 
 
 class DailyPlan(models.Model):
-
     agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="daily_plans")
     date = models.DateField(verbose_name=_("Дата"))
     planned_stores_count = models.IntegerField(

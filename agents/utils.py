@@ -2,12 +2,14 @@ from datetime import datetime, timedelta
 
 import openpyxl
 from django import forms
+from django.contrib import admin
 from django.http import HttpResponse
 from django.shortcuts import render
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-from django.contrib import admin
+
 from .models import DailyPlan, PhotoPost
+
 
 class DateRangeForm(forms.Form):
     start_date = forms.DateField(
@@ -216,7 +218,9 @@ def export_to_excel(modeladmin, request, queryset):
                     max(len(photos) for photos in rmp_photos.values()) if rmp_photos else 0
                 )
                 max_dmp_photos = (
-                    max(len(photos) for photos in dmp_orimi_photos.values()) if dmp_orimi_photos else 0
+                    max(len(photos) for photos in dmp_orimi_photos.values())
+                    if dmp_orimi_photos
+                    else 0
                 )
                 max_photos = max(max_rmp_photos, max_dmp_photos, 1)
 
@@ -257,7 +261,7 @@ def export_to_excel(modeladmin, request, queryset):
                         "РМП_кофе_ПОСЛЕ",
                     ]:
                         if post_type in rmp_photos and photo_index < len(
-                                rmp_photos[post_type]
+                            rmp_photos[post_type]
                         ):
                             post = rmp_photos[post_type][photo_index]
                             image_url = request.build_absolute_uri(post.image.url)
@@ -274,7 +278,7 @@ def export_to_excel(modeladmin, request, queryset):
                     col = 11
                     for brand in dmp_orimi_brands:
                         if brand in dmp_orimi_photos and photo_index < len(
-                                dmp_orimi_photos[brand]
+                            dmp_orimi_photos[brand]
                         ):
                             post = dmp_orimi_photos[brand][photo_index]
                             image_url = request.build_absolute_uri(post.image.url)
@@ -329,7 +333,7 @@ def export_to_excel(modeladmin, request, queryset):
             data_row += 1
 
     for row in ws.iter_rows(
-            min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
+        min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
     ):
         for cell in row:
             cell.alignment = center_align
@@ -575,14 +579,11 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             brand_sums = dict.fromkeys(all_dmp_brands, 0)
             brand_photo_counts = dict.fromkeys(all_dmp_brands, 0)
 
-
             for post in posts_data:
                 post_type = post["post_type"]
                 store_id = post["store"]
                 dmp_type = post["dmp_type"]
                 dmp_count = post["dmp_count"] or 0
-
-
 
                 if "РМП_чай" in post_type:
                     rmp_tea_stores.add(store_id)
@@ -598,7 +599,6 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                     if brand and brand in dmp_orimi_brands:
                         brand_photo_counts[brand] += 1
 
-
                 elif "ДМП_конкурент" in post_type:
                     dmp_competitor_stores.add(store_id)
                     if dmp_count > 0:
@@ -608,7 +608,6 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                     if brand and brand in dmp_competitor_brands:
                         if dmp_count > 0:
                             brand_sums[brand] += dmp_count
-
 
             ws.cell(row=row, column=1, value=date.strftime("%d.%m"))
             ws.cell(row=row, column=2, value=agent.agent_name)
@@ -650,7 +649,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             row += 1
 
     for row in ws.iter_rows(
-            min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
+        min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
     ):
         for cell in row:
             cell.alignment = center_align
@@ -702,7 +701,8 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
         filter_info = f" (фильтр: {start_date or 'начало'} - {end_date or 'конец'})"
 
     modeladmin.message_user(
-        request, f"Отчет по плану визитов создан для {len(selected_agents)} агент(ов){filter_info}"
+        request,
+        f"Отчет по плану визитов создан для {len(selected_agents)} агент(ов){filter_info}",
     )
 
     return response

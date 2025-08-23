@@ -40,12 +40,18 @@ class DateRangeRegionForm(forms.Form):
         required=False,
         label="Регион",
     )
+    manager_name = forms.CharField(
+        widget=forms.TextInput(attrs={"name": "manager_name"}),
+        required=False,
+        label="Имя менеджера",
+    )
 
 
 def export_posts_to_excel(modeladmin, request, queryset):
     start_date = request.POST.get("start_date")
     end_date = request.POST.get("end_date")
     region = request.POST.get("region")
+    manager_name = request.POST.get("manager_name")
 
     if "apply" not in request.POST:
         form = DateRangeRegionForm()
@@ -87,6 +93,8 @@ def export_posts_to_excel(modeladmin, request, queryset):
 
     if region:
         queryset = queryset.filter(region=region)
+    if manager_name:
+        queryset = queryset.filter(manager_name__icontains=manager_name)
 
     for shop in queryset:
         posts = ShopPost.objects.filter(shop=shop)

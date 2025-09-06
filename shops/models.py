@@ -1,4 +1,5 @@
 import os
+from http import HTTPStatus
 
 import requests
 from django.db import models
@@ -88,7 +89,7 @@ class ShopPost(models.Model):
                 },
                 headers={"User-Agent": "DjangoApp"},
             )
-            if response.status_code == 200:
+            if response.status_code == HTTPStatus.OK:
                 data = response.json()
                 return data.get("display_name")
         except Exception as e:

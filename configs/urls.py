@@ -59,15 +59,11 @@ urlpatterns = [
         AgentScheduleView.as_view(),
         name="agent-schedule",
     ),
-    path(
-        "api/photo-posts/create/", PhotoPostCreateAPIView.as_view(), name="photopost-create"
-    ),
+    path("api/photo-posts/create/", PhotoPostCreateAPIView.as_view(), name="photopost-create"),
     path(
         "api/store-id/<str:store_name>/",
         StoreIdByNameView.as_view(),
         name="store-id-by-name",
     ),
-    path(
-        "api/record-daily-plans/", RecordDailyPlansView.as_view(), name="record_daily_plans"
-    ),
+    path("api/record-daily-plans/", RecordDailyPlansView.as_view(), name="record_daily_plans"),
 ]

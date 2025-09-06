@@ -75,8 +75,7 @@ class ShopPostSerializer(serializers.ModelSerializer):
             data.get("latitude") is None and data.get("longitude") is not None
         ):
             raise serializers.ValidationError(
-                "Обе координаты (latitude и longitude) должны быть "
-                "указаны или обе отсутствовать"
+                "Обе координаты (latitude и longitude) должны быть указаны или обе отсутствовать"
             )
         return data
 

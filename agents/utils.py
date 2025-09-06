@@ -114,9 +114,7 @@ def export_to_excel(modeladmin, request, queryset):
     col = 1
     for i, header in enumerate(main_headers[:10]):
         ws.cell(row=row, column=col + i, value=header).font = header_font
-        ws.merge_cells(
-            start_row=row, start_column=col + i, end_row=row + 1, end_column=col + i
-        )
+        ws.merge_cells(start_row=row, start_column=col + i, end_row=row + 1, end_column=col + i)
         ws.cell(row=row, column=col + i).alignment = center_align
 
     col_offset = 11
@@ -195,16 +193,12 @@ def export_to_excel(modeladmin, request, queryset):
                     "РМП_кофе_ДО",
                     "РМП_кофе_ПОСЛЕ",
                 ]:
-                    type_posts = [
-                        p for p in posts_list if p.post_type == post_type and p.image
-                    ]
+                    type_posts = [p for p in posts_list if p.post_type == post_type and p.image]
                     if type_posts:
                         rmp_photos[post_type] = type_posts
 
                 dmp_orimi_photos = {}
-                dmp_orimi_posts = [
-                    p for p in posts_list if p.post_type == "ДМП_ОРИМИ КР" and p.image
-                ]
+                dmp_orimi_posts = [p for p in posts_list if p.post_type == "ДМП_ОРИМИ КР" and p.image]
                 for brand in dmp_orimi_brands:
                     brand_variants = brand_mapping.get(brand.lower(), [brand.lower()])
                     brand_posts = []
@@ -214,14 +208,8 @@ def export_to_excel(modeladmin, request, queryset):
                     if brand_posts:
                         dmp_orimi_photos[brand] = brand_posts
 
-                max_rmp_photos = (
-                    max(len(photos) for photos in rmp_photos.values()) if rmp_photos else 0
-                )
-                max_dmp_photos = (
-                    max(len(photos) for photos in dmp_orimi_photos.values())
-                    if dmp_orimi_photos
-                    else 0
-                )
+                max_rmp_photos = max(len(photos) for photos in rmp_photos.values()) if rmp_photos else 0
+                max_dmp_photos = max(len(photos) for photos in dmp_orimi_photos.values()) if dmp_orimi_photos else 0
                 max_photos = max(max_rmp_photos, max_dmp_photos, 1)
 
                 for photo_index in range(max_photos):
@@ -260,9 +248,7 @@ def export_to_excel(modeladmin, request, queryset):
                         "РМП_кофе_ДО",
                         "РМП_кофе_ПОСЛЕ",
                     ]:
-                        if post_type in rmp_photos and photo_index < len(
-                            rmp_photos[post_type]
-                        ):
+                        if post_type in rmp_photos and photo_index < len(rmp_photos[post_type]):
                             post = rmp_photos[post_type][photo_index]
                             image_url = request.build_absolute_uri(post.image.url)
                             ws.cell(
@@ -277,9 +263,7 @@ def export_to_excel(modeladmin, request, queryset):
 
                     col = 11
                     for brand in dmp_orimi_brands:
-                        if brand in dmp_orimi_photos and photo_index < len(
-                            dmp_orimi_photos[brand]
-                        ):
+                        if brand in dmp_orimi_photos and photo_index < len(dmp_orimi_photos[brand]):
                             post = dmp_orimi_photos[brand][photo_index]
                             image_url = request.build_absolute_uri(post.image.url)
                             ws.cell(
@@ -293,13 +277,9 @@ def export_to_excel(modeladmin, request, queryset):
                         col += 1
 
                     if photo_index == 0:
-                        dmp_competitor_posts = [
-                            p for p in posts_list if p.post_type == "ДМП_конкурент"
-                        ]
+                        dmp_competitor_posts = [p for p in posts_list if p.post_type == "ДМП_конкурент"]
                         for brand in dmp_competitor_brands:
-                            brand_variants = brand_mapping.get(
-                                brand.lower(), [brand.lower()]
-                            )
+                            brand_variants = brand_mapping.get(brand.lower(), [brand.lower()])
 
                             brand_posts = []
                             for post in dmp_competitor_posts:
@@ -332,9 +312,7 @@ def export_to_excel(modeladmin, request, queryset):
         if agent_has_data:
             data_row += 1
 
-    for row in ws.iter_rows(
-        min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
-    ):
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
         for cell in row:
             cell.alignment = center_align
             cell.border = thin_border
@@ -360,13 +338,9 @@ def export_to_excel(modeladmin, request, queryset):
         column_letter = get_column_letter(col_num)
         ws.column_dimensions[column_letter].width = 10
 
-    response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-    agent_names = "_".join(
-        [agent.agent_name[:10].replace(" ", "_") for agent in selected_agents[:3]]
-    )
+    agent_names = "_".join([agent.agent_name[:10].replace(" ", "_") for agent in selected_agents[:3]])
     if len(selected_agents) > 3:
         agent_names += f"_and_{len(selected_agents) - 3}_more"
 
@@ -387,9 +361,7 @@ def export_to_excel(modeladmin, request, queryset):
     if start_date or end_date:
         filter_info = f" (период: {start_date or 'начало'} - {end_date or 'конец'})"
 
-    modeladmin.message_user(
-        request, f"Отчет успешно создан для {len(selected_agents)} агент(ов){filter_info}"
-    )
+    modeladmin.message_user(request, f"Отчет успешно создан для {len(selected_agents)} агент(ов){filter_info}")
 
     return response
 
@@ -499,9 +471,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
         ws.cell(row=1, column=start_col, value=header).font = header_font
         ws.cell(row=1, column=start_col).fill = header_fill
         if start_col != end_col:
-            ws.merge_cells(
-                start_row=1, start_column=start_col, end_row=1, end_column=end_col
-            )
+            ws.merge_cells(start_row=1, start_column=start_col, end_row=1, end_column=end_col)
             ws.cell(row=1, column=end_col).fill = header_fill
 
     for col, header in headers_row2:
@@ -536,15 +506,13 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             total_time_minutes = 0
 
             visited_stores = (
-                PhotoPost.objects.filter(agent=agent, created__date=date)
-                .values_list("store", flat=True)
-                .distinct()
+                PhotoPost.objects.filter(agent=agent, created__date=date).values_list("store", flat=True).distinct()
             )
 
             for store_id in visited_stores:
-                store_posts = PhotoPost.objects.filter(
-                    agent=agent, store_id=store_id, created__date=date
-                ).order_by("created")
+                store_posts = PhotoPost.objects.filter(agent=agent, store_id=store_id, created__date=date).order_by(
+                    "created"
+                )
 
                 if store_posts.exists():
                     first_post = store_posts.first()
@@ -605,9 +573,8 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                         dmp_competitor_sum += dmp_count
 
                     brand = get_brand_from_dmp_type(dmp_type)
-                    if brand and brand in dmp_competitor_brands:
-                        if dmp_count > 0:
-                            brand_sums[brand] += dmp_count
+                    if brand and brand in dmp_competitor_brands and dmp_count > 0:
+                        brand_sums[brand] += dmp_count
 
             ws.cell(row=row, column=1, value=date.strftime("%d.%m"))
             ws.cell(row=row, column=2, value=agent.agent_name)
@@ -648,9 +615,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
 
             row += 1
 
-    for row in ws.iter_rows(
-        min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column
-    ):
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
         for cell in row:
             cell.alignment = center_align
             cell.border = thin_border
@@ -679,9 +644,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
         col_letter = get_column_letter(i)
         ws.column_dimensions[col_letter].width = 10
 
-    response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
     date_suffix = ""
     if start_date and end_date:

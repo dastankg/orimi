@@ -1,4 +1,5 @@
 import os
+from http import HTTPStatus
 
 import requests
 from django.db import models
@@ -22,9 +23,7 @@ class Store(models.Model):
 
 class Agent(models.Model):
     agent_name = models.CharField(max_length=255, verbose_name=_("Agent Name"))
-    agent_number = models.CharField(
-        max_length=21, db_index=True, verbose_name=_("Agent Number")
-    )
+    agent_number = models.CharField(max_length=21, db_index=True, verbose_name=_("Agent Number"))
 
     monday_stores = models.ManyToManyField(
         Store, related_name="monday_agents", blank=True, verbose_name=_("Monday Stores")
@@ -85,9 +84,7 @@ class PhotoPost(models.Model):
     dmp_count = models.IntegerField(blank=True, null=True)
 
     post_type = models.CharField(max_length=20, choices=POST_TYPE_CHOICES)
-    image = models.ImageField(
-        upload_to="posts/", verbose_name=_("Photo"), blank=True, null=True
-    )
+    image = models.ImageField(upload_to="posts/", verbose_name=_("Photo"), blank=True, null=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     address = models.CharField(max_length=255, null=True, blank=True)
@@ -115,7 +112,7 @@ class PhotoPost(models.Model):
                 },
                 headers={"User-Agent": "DjangoApp"},
             )
-            if response.status_code == 200:
+            if response.status_code == HTTPStatus.OK:
                 data = response.json()
                 return data.get("display_name")
         except Exception as e:
@@ -133,12 +130,8 @@ class PhotoPost(models.Model):
 class DailyPlan(models.Model):
     agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="daily_plans")
     date = models.DateField(verbose_name=_("Дата"))
-    planned_stores_count = models.IntegerField(
-        default=0, verbose_name=_("Количество магазинов по плану")
-    )
-    visited_stores_count = models.IntegerField(
-        default=0, verbose_name=_("Количество посещенных магазинов")
-    )
+    planned_stores_count = models.IntegerField(default=0, verbose_name=_("Количество магазинов по плану"))
+    visited_stores_count = models.IntegerField(default=0, verbose_name=_("Количество посещенных магазинов"))
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -153,7 +146,10 @@ class DailyPlan(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.agent.agent_name} - {self.date} - План: {self.planned_stores_count}, Посещено: {self.visited_stores_count}"
+        return (
+            f"{self.agent.agent_name} - {self.date} - План: {self.planned_stores_count}, Посещено: "
+            f"{self.visited_stores_count}"
+        )
 
     @property
     def completion_rate(self):

@@ -136,9 +136,7 @@ class RecordDailyPlansView(APIView):
                 planned_count = planned_stores.count()
 
                 visited_stores_count = (
-                    Store.objects.filter(posts__agent=agent, posts__created__date=today)
-                    .distinct()
-                    .count()
+                    Store.objects.filter(posts__agent=agent, posts__created__date=today).distinct().count()
                 )
 
                 daily_plan, created = DailyPlan.objects.update_or_create(

@@ -16,12 +16,13 @@ class PostAdmin(admin.ModelAdmin):
     list_per_page = 30
     ordering = ("-created",)
     readonly_fields = ("image_preview",)
-    
+
     def image_preview(self, obj):
         if obj.image:
             url = obj.image.url if hasattr(obj.image, "url") else f"/media/{obj.image}"
             return mark_safe(f'<img src="{url}" style="max-height: 50px; max-width: 50px;"/>')
         return "-"
+
     image_preview.short_description = "Превью"
 
 
@@ -47,8 +48,11 @@ class PostInline(admin.TabularInline):
     def image_preview(self, obj):
         if obj.image:
             url = obj.image.url if hasattr(obj.image, "url") else f"/media/{obj.image}"
-            return mark_safe(f'<a href="{url}" target="_blank"><img src="{url}" style="max-height: 40px; max-width: 40px;"/></a>')
+            return mark_safe(
+                f'<a href="{url}" target="_blank"><img src="{url}" style="max-height: 40px; max-width: 40px;"/></a>'
+            )
         return "-"
+
     image_preview.short_description = "Превью"
 
 
@@ -58,7 +62,14 @@ class ManyToManyStoreWidget(forms.SelectMultiple):
 
 @admin.register(Shop)
 class ShopAdmin(admin.ModelAdmin):
-    list_display = ("shop_name", "owner_name", "manager_name", "get_telephones", "address", "region")
+    list_display = (
+        "shop_name",
+        "owner_name",
+        "manager_name",
+        "get_telephones",
+        "address",
+        "region",
+    )
     search_fields = ("shop_name", "owner_name", "manager_name", "address")
     list_filter = ("region", "manager_name")
     list_per_page = 25
@@ -66,12 +77,11 @@ class ShopAdmin(admin.ModelAdmin):
     inlines = [TelephoneInline, PostInline]
     actions = [export_posts_to_excel, export_reports_to_excel]
     fieldsets = (
-        ("Основная информация", {
-            "fields": ("shop_name", "description")
-        }),
-        ("Контактная информация", {
-            "fields": ("owner_name", "manager_name", "address", "region")
-        }),
+        ("Основная информация", {"fields": ("shop_name", "description")}),
+        (
+            "Контактная информация",
+            {"fields": ("owner_name", "manager_name", "address", "region")},
+        ),
     )
 
     def get_telephones(self, obj):

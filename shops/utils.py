@@ -65,9 +65,7 @@ def export_posts_to_excel(modeladmin, request, queryset):
     if start_date:
         start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
     if end_date:
-        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").replace(
-            hour=23, minute=59, second=59
-        )
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
 
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -147,9 +145,7 @@ def export_reports_to_excel(modeladmin, request, queryset):
         start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
         reports = reports.filter(created_at__gte=start_date)
     if end_date:
-        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").replace(
-            hour=23, minute=59, second=59
-        )
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
         reports = reports.filter(created_at__lte=end_date)
 
     reports = reports.select_related("shop")
@@ -166,6 +162,7 @@ def export_reports_to_excel(modeladmin, request, queryset):
     columns = [
         "ID",
         "Название магазина",
+        "Имя менеджера",
         "Ответ",
         "Дата создания",
         "Время",
@@ -179,6 +176,7 @@ def export_reports_to_excel(modeladmin, request, queryset):
             [
                 report.id,
                 report.shop.shop_name,
+                report.shop.manager_name,
                 report.answer,
                 local_created.strftime("%Y-%m-%d"),
                 local_created.strftime("%H:%M:%S"),

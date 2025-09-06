@@ -14,9 +14,7 @@ class AgentSerializer(serializers.ModelSerializer):
 
 
 class PhotoPostSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(
-        max_length=None, use_url=True, required=False, allow_null=True
-    )
+    image = serializers.ImageField(max_length=None, use_url=True, required=False, allow_null=True)
 
     class Meta:
         model = PhotoPost
@@ -70,7 +68,5 @@ class PhotoPostSerializer(serializers.ModelSerializer):
     def validate_post_type(self, value):
         valid_types = [choice[0] for choice in PhotoPost.POST_TYPE_CHOICES]
         if value not in valid_types:
-            raise serializers.ValidationError(
-                f"Недопустимый тип поста. Доступные: {valid_types}"
-            )
+            raise serializers.ValidationError(f"Недопустимый тип поста. Доступные: {valid_types}")
         return value

@@ -7,6 +7,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from agents.constant import MAX_DISTANCE
 from agents.models import Agent, DailyPlan, Store
 from agents.serializers import AgentSerializer, PhotoPostSerializer
 
@@ -44,7 +45,7 @@ class CheckAddressView(APIView):
         store_location = (store.latitude, store.longitude)
         distance_meters = geodesic(user_location, store_location).meters
 
-        if distance_meters > 250:
+        if distance_meters > MAX_DISTANCE:
             return Response(
                 {
                     "success": False,

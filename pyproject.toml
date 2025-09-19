@@ -29,6 +29,7 @@ line-length = 120
 target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I"]
-extend-select = ["B", "C4", "SIM", "TID", "UP", "N", "W", "PL"]
+extend-select = ["B", "C4", "SIM", "TID", "UP", "N", "W", "PL", "FA", "ISC", "ICN", "RET", "SIM", "TID", "TC", "TD",
+    "NPY", "A"]
 [tool.ruff.lint.isort]
 known-first-party = ["orimi_shelf"]

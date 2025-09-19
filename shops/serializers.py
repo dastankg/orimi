@@ -58,7 +58,7 @@ class ShopPostSerializer(serializers.ModelSerializer):
             image.save(output, format="JPEG", quality=70, optimize=True)
             output.seek(0)
 
-            compressed_image = InMemoryUploadedFile(
+            return InMemoryUploadedFile(
                 output,
                 "ImageField",
                 f"{value.name.split('.')[0]}.jpg",
@@ -67,7 +67,6 @@ class ShopPostSerializer(serializers.ModelSerializer):
                 None,
             )
 
-            return compressed_image
         return value
 
     def validate(self, data):

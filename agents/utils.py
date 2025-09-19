@@ -8,6 +8,8 @@ from django.shortcuts import render
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
+from agents.constant import COMPLETED_PERCENTAGE, MAX_MINUTES_IN_STORE, MAX_VISIBLE_AGENTS
+
 from .models import DailyPlan, PhotoPost
 
 
@@ -341,7 +343,7 @@ def export_to_excel(modeladmin, request, queryset):
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
     agent_names = "_".join([agent.agent_name[:10].replace(" ", "_") for agent in selected_agents[:3]])
-    if len(selected_agents) > 3:
+    if len(selected_agents) > MAX_VISIBLE_AGENTS:
         agent_names += f"_and_{len(selected_agents) - 3}_more"
 
     date_suffix = ""
@@ -520,7 +522,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
                     time_diff = last_post.created - first_post.created
                     minutes_in_store = int(time_diff.total_seconds() // 60)
 
-                    if minutes_in_store < 30:
+                    if minutes_in_store < MAX_MINUTES_IN_STORE:
                         visits_under_30 += 1
                     else:
                         visits_over_30 += 1
@@ -584,7 +586,7 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
             if plan_count > 0:
                 completion_percent = round((fact_count / plan_count) * 100)
                 ws.cell(row=row, column=5, value=f"{completion_percent}%")
-                if completion_percent >= 80:
+                if completion_percent >= COMPLETED_PERCENTAGE:
                     ws.cell(row=row, column=5).fill = success_fill
                 else:
                     ws.cell(row=row, column=5).fill = fail_fill

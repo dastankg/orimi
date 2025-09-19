@@ -8,7 +8,7 @@ from django.shortcuts import render
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-from .constant import COMPLETED_PERCENTAGE, MAX_MINUTES_IN_STORE
+from .constant import COMPLETED_PERCENTAGE, MAX_MINUTES_IN_STORE, MAX_VISIBLE_AGENTS
 from .models import DailyPlan, PhotoPost
 
 
@@ -342,7 +342,7 @@ def export_to_excel(modeladmin, request, queryset):
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
     agent_names = "_".join([agent.agent_name[:10].replace(" ", "_") for agent in selected_agents[:3]])
-    if len(selected_agents) > 3:
+    if len(selected_agents) > MAX_VISIBLE_AGENTS:
         agent_names += f"_and_{len(selected_agents) - 3}_more"
 
     date_suffix = ""
@@ -411,28 +411,35 @@ def export_plan_visits_to_excel(modeladmin, request, queryset):
 
         dmp_type_lower = dmp_type.strip().lower()
 
-        if dmp_type_lower in ["tess", "тесс"]:
-            return "Tess"
-        elif dmp_type_lower in ["гринф", "greenf", "grinf"]:
-            return "Гринф"
-        elif dmp_type_lower in ["жн", "jn"]:
-            return "ЖН"
-        elif dmp_type_lower in ["шах", "shah"]:
-            return "Шах"
-        elif dmp_type_lower in ["jardin", "жардин"]:
-            return "Jardin"
-        elif dmp_type_lower in ["жокей", "jockey"]:
-            return "Жокей"
-        elif dmp_type_lower in ["beta", "бета"]:
-            return "Beta"
-        elif dmp_type_lower in ["пиала", "piala"]:
-            return "Пиала"
-        elif dmp_type_lower in ["ахмад", "ahmad"]:
-            return "Ахмад"
-        elif dmp_type_lower in ["jacobs", "якобс"]:
-            return "Jacobs"
-        elif dmp_type_lower in ["nestle", "нестле"]:
-            return "Nestle"
+        brand_mapping = {
+            "tess": "Tess",
+            "тесс": "Tess",
+            "гринф": "Гринф",
+            "greenf": "Гринф",
+            "grinf": "Гринф",
+            "жн": "ЖН",
+            "jn": "ЖН",
+            "шах": "Шах",
+            "shah": "Шах",
+            "jardin": "Jardin",
+            "жардин": "Jardin",
+            "жокей": "Жокей",
+            "jockey": "Жокей",
+            "beta": "Beta",
+            "бета": "Beta",
+            "пиала": "Пиала",
+            "piala": "Пиала",
+            "ахмад": "Ахмад",
+            "ahmad": "Ахмад",
+            "jacobs": "Jacobs",
+            "якобс": "Jacobs",
+            "nestle": "Nestle",
+            "нестле": "Nestle",
+        }
+
+        brand = brand_mapping.get(dmp_type_lower)
+        if brand:
+            return brand
 
         for brand in all_dmp_brands:
             if brand.lower() == dmp_type_lower:

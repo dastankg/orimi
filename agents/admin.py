@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Agent, DailyPlan, PhotoPost, Store
+from .models import Agent, DailyPlan, PhotoPost, ScheduleConfig, Store
 from .utils import export_plan_visits_to_excel, export_to_excel
+
+WEEK_DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 
 @admin.register(Store)
@@ -16,16 +18,43 @@ class StoreAdmin(admin.ModelAdmin):
 class AgentAdmin(admin.ModelAdmin):
     list_display = ["agent_name", "agent_number"]
     search_fields = ["agent_name", "agent_number"]
-    filter_horizontal = [
-        "monday_stores",
-        "tuesday_stores",
-        "wednesday_stores",
-        "thursday_stores",
-        "friday_stores",
-        "saturday_stores",
-        "sunday_stores",
-    ]
+    filter_horizontal = (
+        [f"{day}_stores" for day in WEEK_DAYS]
+        + [f"week2_{day}_stores" for day in WEEK_DAYS]
+        + [f"week3_{day}_stores" for day in WEEK_DAYS]
+        + [f"week4_{day}_stores" for day in WEEK_DAYS]
+    )
+    fieldsets = (
+        (None, {"fields": ("agent_name", "agent_number")}),
+        ("Неделя 1", {
+            "classes": ("collapse",),
+            "fields": tuple(f"{day}_stores" for day in WEEK_DAYS),
+        }),
+        ("Неделя 2", {
+            "classes": ("collapse",),
+            "fields": tuple(f"week2_{day}_stores" for day in WEEK_DAYS),
+        }),
+        ("Неделя 3", {
+            "classes": ("collapse",),
+            "fields": tuple(f"week3_{day}_stores" for day in WEEK_DAYS),
+        }),
+        ("Неделя 4", {
+            "classes": ("collapse",),
+            "fields": tuple(f"week4_{day}_stores" for day in WEEK_DAYS),
+        }),
+    )
     actions = [export_to_excel, export_plan_visits_to_excel]
+
+
+@admin.register(ScheduleConfig)
+class ScheduleConfigAdmin(admin.ModelAdmin):
+    list_display = ["cycle_start_date"]
+
+    def has_add_permission(self, request):
+        return not ScheduleConfig.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class PhotoPostInline(admin.TabularInline):

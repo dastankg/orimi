@@ -12,16 +12,8 @@ WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", 
 def get_current_week_number(target_date=None):
     if target_date is None:
         target_date = date.today()
-    try:
-        config = ScheduleConfig.objects.first()
-    except Exception:
-        return 1
-    if not config:
-        return 1
-    days_passed = (target_date - config.cycle_start_date).days
-    if days_passed < 0:
-        return 1
-    return (days_passed // 7) % 4 + 1
+    iso_week = target_date.isocalendar()[1]
+    return (iso_week + 2) % 4 + 1
 
 
 class Store(models.Model):

@@ -141,7 +141,10 @@ def export_reports_to_excel(modeladmin, request, queryset):
         }
         return render(request, "export_reports.html", context)
 
-    reports = Report.objects.filter(shop__in=queryset)
+    if queryset.model is Report:
+        reports = queryset
+    else:
+        reports = Report.objects.filter(shop__in=queryset)
 
     if start_date:
         start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")

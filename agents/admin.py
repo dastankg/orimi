@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Agent, DailyPlan, PhotoPost, Store
+from .models import Agent, DailyPlan, PhotoPost, Store, get_current_week_number
 from .utils import export_plan_visits_to_excel, export_to_excel
 
 WEEK_DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -44,6 +44,16 @@ class AgentAdmin(admin.ModelAdmin):
         }),
     )
     actions = [export_to_excel, export_plan_visits_to_excel]
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["current_week"] = get_current_week_number()
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def add_view(self, request, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["current_week"] = get_current_week_number()
+        return super().add_view(request, form_url, extra_context)
 
 
 

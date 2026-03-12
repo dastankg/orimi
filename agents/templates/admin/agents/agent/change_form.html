@@ -1,0 +1,219 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+.schedule-grid {
+    margin: 20px 0;
+    border: 1px solid var(--hairline-color, #ddd);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--body-bg, #fff);
+}
+
+.schedule-grid table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.schedule-grid th {
+    background: var(--header-bg, #417690);
+    color: var(--header-link-color, #fff);
+    padding: 10px 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.15);
+}
+
+.schedule-grid th:first-child {
+    width: 90px;
+}
+
+.schedule-grid th.current-day {
+    background: #2e6b8a;
+    box-shadow: inset 0 -3px 0 #28a745;
+}
+
+.schedule-grid td {
+    padding: 6px;
+    border: 1px solid var(--hairline-color, #ddd);
+    vertical-align: top;
+    font-size: 12px;
+    min-height: 50px;
+}
+
+.schedule-grid tr.current-week-row td:first-child {
+    position: relative;
+}
+
+.schedule-grid tr.current-week-row td:first-child::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 7px;
+    height: 7px;
+    background: #28a745;
+    border-radius: 50%;
+}
+
+.schedule-grid .week-label {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--body-quiet-color, #666);
+    text-align: center;
+    white-space: nowrap;
+    padding-left: 16px;
+}
+
+.schedule-grid .store-chip {
+    display: inline-block;
+    background: var(--darkened-bg, #f0f0f0);
+    color: var(--body-fg, #333);
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin: 1px;
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.schedule-grid .cell-empty {
+    color: var(--body-quiet-color, #999);
+    font-style: italic;
+    font-size: 11px;
+    text-align: center;
+    padding-top: 10px;
+}
+
+
+.schedule-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 20px 0 8px 0;
+    color: var(--body-fg, #333);
+}
+
+.week-fieldsets-section .week-fieldset-block {
+    margin-bottom: 5px;
+}
+
+.week-fieldsets-section .week-fieldset-block h2 {
+    cursor: pointer;
+    user-select: none;
+}
+</style>
+{% endblock %}
+
+{% block after_related_objects %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var fieldsets = document.querySelectorAll('#content-main fieldset');
+    var weekFieldsets = [];
+    var DAYS_RU = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    var FIELD_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    var currentWeek = parseInt('{{ current_week }}') || 1;
+    var today = new Date().getDay();
+    var currentDayIdx = today === 0 ? 6 : today - 1;
+
+    fieldsets.forEach(function(fs) {
+        var heading = fs.querySelector('h2');
+        if (heading && heading.textContent.trim().match(/^Неделя \d/)) {
+            weekFieldsets.push(fs);
+        }
+    });
+
+    if (weekFieldsets.length === 0) return;
+
+    function getSelectedStores(weekIdx, dayIdx) {
+        var prefix = weekIdx === 0 ? '' : 'week' + (weekIdx + 1) + '_';
+        var fieldName = prefix + FIELD_DAYS[dayIdx] + '_stores';
+        var selectTo = document.getElementById('id_' + fieldName + '_to');
+        if (!selectTo) return [];
+        var stores = [];
+        for (var i = 0; i < selectTo.options.length; i++) {
+            stores.push(selectTo.options[i].text);
+        }
+        return stores;
+    }
+
+    function buildGrid() {
+        var existing = document.getElementById('schedule-overview');
+        if (existing) existing.remove();
+
+        var wrapper = document.createElement('div');
+        wrapper.id = 'schedule-overview';
+        wrapper.innerHTML = '<div class="schedule-title">Расписание</div>';
+
+        var grid = document.createElement('div');
+        grid.className = 'schedule-grid';
+
+        var table = document.createElement('table');
+        var thead = '<tr><th></th>';
+        for (var d = 0; d < 7; d++) {
+            thead += '<th class="' + (d === currentDayIdx ? 'current-day' : '') + '">' + DAYS_RU[d] + '</th>';
+        }
+        thead += '</tr>';
+        table.innerHTML = thead;
+
+        var tbody = document.createElement('tbody');
+        for (var w = 0; w < weekFieldsets.length; w++) {
+            var tr = document.createElement('tr');
+            if (w + 1 === currentWeek) tr.className = 'current-week-row';
+
+            var weekLabel = document.createElement('td');
+            weekLabel.className = 'week-label';
+            weekLabel.textContent = 'Неделя ' + (w + 1);
+            tr.appendChild(weekLabel);
+
+            for (var dd = 0; dd < 7; dd++) {
+                var td = document.createElement('td');
+                var stores = getSelectedStores(w, dd);
+                if (stores.length > 0) {
+                    stores.forEach(function(name) {
+                        var chip = document.createElement('span');
+                        chip.className = 'store-chip';
+                        chip.textContent = name;
+                        chip.title = name;
+                        td.appendChild(chip);
+                    });
+                } else {
+                    td.innerHTML = '<div class="cell-empty">—</div>';
+                }
+
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        grid.appendChild(table);
+        wrapper.appendChild(grid);
+
+        weekFieldsets[0].parentNode.insertBefore(wrapper, weekFieldsets[0]);
+    }
+
+
+    buildGrid();
+
+    var observer = new MutationObserver(function() { buildGrid(); });
+    weekFieldsets.forEach(function(fs) {
+        var selects = fs.querySelectorAll('select');
+        selects.forEach(function(sel) {
+            sel.addEventListener('change', function() { setTimeout(buildGrid, 50); });
+            observer.observe(sel, { childList: true });
+        });
+        var buttons = fs.querySelectorAll('.selector-add, .selector-remove, .selector-clearall, .selector-chooseall');
+        buttons.forEach(function(btn) {
+            btn.addEventListener('click', function() { setTimeout(buildGrid, 100); });
+        });
+    });
+});
+</script>
+{% endblock %}

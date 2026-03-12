@@ -2,6 +2,10 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import path
 
+admin.site.site_header = "Orimi"
+admin.site.site_title = "Orimi"
+admin.site.index_title = "Панель управления"
+
 from agents.views import (
     AgentDetailView,
     AgentScheduleView,

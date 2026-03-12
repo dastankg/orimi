@@ -1,9 +1,19 @@
 import os
+from datetime import date
 from http import HTTPStatus
 
 import requests
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
+
+def get_current_week_number(target_date=None):
+    if target_date is None:
+        target_date = date.today()
+    iso_week = target_date.isocalendar()[1]
+    return (iso_week + 2) % 4 + 1
 
 
 class Store(models.Model):
@@ -25,39 +35,108 @@ class Agent(models.Model):
     agent_name = models.CharField(max_length=255, verbose_name=_("Agent Name"))
     agent_number = models.CharField(max_length=21, db_index=True, verbose_name=_("Agent Number"))
 
+    # ── Неделя 1 (оригинальные поля) ──
     monday_stores = models.ManyToManyField(
         Store, related_name="monday_agents", blank=True, verbose_name=_("Monday Stores")
     )
     tuesday_stores = models.ManyToManyField(
-        Store,
-        related_name="tuesday_agents",
-        blank=True,
-        verbose_name=_("Tuesday Stores"),
+        Store, related_name="tuesday_agents", blank=True, verbose_name=_("Tuesday Stores"),
     )
     wednesday_stores = models.ManyToManyField(
-        Store,
-        related_name="wednesday_agents",
-        blank=True,
-        verbose_name=_("Wednesday Stores"),
+        Store, related_name="wednesday_agents", blank=True, verbose_name=_("Wednesday Stores"),
     )
     thursday_stores = models.ManyToManyField(
-        Store,
-        related_name="thursday_agents",
-        blank=True,
-        verbose_name=_("Thursday Stores"),
+        Store, related_name="thursday_agents", blank=True, verbose_name=_("Thursday Stores"),
     )
     friday_stores = models.ManyToManyField(
         Store, related_name="friday_agents", blank=True, verbose_name=_("Friday Stores")
     )
     saturday_stores = models.ManyToManyField(
-        Store,
-        related_name="saturday_agents",
-        blank=True,
-        verbose_name=_("Saturday Stores"),
+        Store, related_name="saturday_agents", blank=True, verbose_name=_("Saturday Stores"),
     )
     sunday_stores = models.ManyToManyField(
         Store, related_name="sunday_agents", blank=True, verbose_name=_("Sunday Stores")
     )
+
+    # ── Неделя 2 ──
+    week2_monday_stores = models.ManyToManyField(
+        Store, related_name="week2_monday_agents", blank=True, verbose_name=_("Week 2 — Monday"),
+    )
+    week2_tuesday_stores = models.ManyToManyField(
+        Store, related_name="week2_tuesday_agents", blank=True, verbose_name=_("Week 2 — Tuesday"),
+    )
+    week2_wednesday_stores = models.ManyToManyField(
+        Store, related_name="week2_wednesday_agents", blank=True, verbose_name=_("Week 2 — Wednesday"),
+    )
+    week2_thursday_stores = models.ManyToManyField(
+        Store, related_name="week2_thursday_agents", blank=True, verbose_name=_("Week 2 — Thursday"),
+    )
+    week2_friday_stores = models.ManyToManyField(
+        Store, related_name="week2_friday_agents", blank=True, verbose_name=_("Week 2 — Friday"),
+    )
+    week2_saturday_stores = models.ManyToManyField(
+        Store, related_name="week2_saturday_agents", blank=True, verbose_name=_("Week 2 — Saturday"),
+    )
+    week2_sunday_stores = models.ManyToManyField(
+        Store, related_name="week2_sunday_agents", blank=True, verbose_name=_("Week 2 — Sunday"),
+    )
+
+    # ── Неделя 3 ──
+    week3_monday_stores = models.ManyToManyField(
+        Store, related_name="week3_monday_agents", blank=True, verbose_name=_("Week 3 — Monday"),
+    )
+    week3_tuesday_stores = models.ManyToManyField(
+        Store, related_name="week3_tuesday_agents", blank=True, verbose_name=_("Week 3 — Tuesday"),
+    )
+    week3_wednesday_stores = models.ManyToManyField(
+        Store, related_name="week3_wednesday_agents", blank=True, verbose_name=_("Week 3 — Wednesday"),
+    )
+    week3_thursday_stores = models.ManyToManyField(
+        Store, related_name="week3_thursday_agents", blank=True, verbose_name=_("Week 3 — Thursday"),
+    )
+    week3_friday_stores = models.ManyToManyField(
+        Store, related_name="week3_friday_agents", blank=True, verbose_name=_("Week 3 — Friday"),
+    )
+    week3_saturday_stores = models.ManyToManyField(
+        Store, related_name="week3_saturday_agents", blank=True, verbose_name=_("Week 3 — Saturday"),
+    )
+    week3_sunday_stores = models.ManyToManyField(
+        Store, related_name="week3_sunday_agents", blank=True, verbose_name=_("Week 3 — Sunday"),
+    )
+
+    # ── Неделя 4 ──
+    week4_monday_stores = models.ManyToManyField(
+        Store, related_name="week4_monday_agents", blank=True, verbose_name=_("Week 4 — Monday"),
+    )
+    week4_tuesday_stores = models.ManyToManyField(
+        Store, related_name="week4_tuesday_agents", blank=True, verbose_name=_("Week 4 — Tuesday"),
+    )
+    week4_wednesday_stores = models.ManyToManyField(
+        Store, related_name="week4_wednesday_agents", blank=True, verbose_name=_("Week 4 — Wednesday"),
+    )
+    week4_thursday_stores = models.ManyToManyField(
+        Store, related_name="week4_thursday_agents", blank=True, verbose_name=_("Week 4 — Thursday"),
+    )
+    week4_friday_stores = models.ManyToManyField(
+        Store, related_name="week4_friday_agents", blank=True, verbose_name=_("Week 4 — Friday"),
+    )
+    week4_saturday_stores = models.ManyToManyField(
+        Store, related_name="week4_saturday_agents", blank=True, verbose_name=_("Week 4 — Saturday"),
+    )
+    week4_sunday_stores = models.ManyToManyField(
+        Store, related_name="week4_sunday_agents", blank=True, verbose_name=_("Week 4 — Sunday"),
+    )
+
+    def get_stores_for_date(self, target_date=None):
+        if target_date is None:
+            target_date = date.today()
+        week_num = get_current_week_number(target_date)
+        day_name = WEEKDAYS[target_date.weekday()]
+        if week_num == 1:
+            field_name = f"{day_name}_stores"
+        else:
+            field_name = f"week{week_num}_{day_name}_stores"
+        return getattr(self, field_name).all()
 
     def __str__(self):
         return self.agent_name
@@ -65,6 +144,29 @@ class Agent(models.Model):
     class Meta:
         verbose_name = _("Merchandiser")
         verbose_name_plural = _("Merchandisers")
+
+
+class ScheduleConfig(models.Model):
+    cycle_start_date = models.DateField(
+        verbose_name=_("Дата начала цикла"),
+        help_text=_("Понедельник, с которого начинается Неделя 1. Цикл повторяется каждые 4 недели."),
+    )
+
+    def __str__(self):
+        return f"Начало цикла: {self.cycle_start_date}"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={"cycle_start_date": date.today()})
+        return obj
+
+    class Meta:
+        verbose_name = _("Настройка расписания")
+        verbose_name_plural = _("Настройка расписания")
 
 
 class PhotoPost(models.Model):

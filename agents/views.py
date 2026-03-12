@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.utils import timezone
 from geopy.distance import geodesic
 from rest_framework import status
@@ -63,19 +61,7 @@ class AgentScheduleView(APIView):
             agent_number = "+" + agent_number
 
         agent = get_object_or_404(Agent, agent_number=agent_number)
-
-        weekdays = [
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-            "sunday",
-        ]
-        current_day = weekdays[datetime.now().weekday()]
-        stores_attr = f"{current_day}_stores"
-        stores = getattr(agent, stores_attr).all()
+        stores = agent.get_stores_for_date()
 
         data = [
             {
@@ -108,32 +94,11 @@ class RecordDailyPlansView(APIView):
     def post(self, request):
         try:
             today = timezone.now().date()
-            weekday = today.weekday()
-
-            weekday_fields = {
-                0: "monday_stores",
-                1: "tuesday_stores",
-                2: "wednesday_stores",
-                3: "thursday_stores",
-                4: "friday_stores",
-                5: "saturday_stores",
-                6: "sunday_stores",
-            }
-
-            field_name = weekday_fields.get(weekday)
-            if not field_name:
-                return Response(
-                    {
-                        "success": False,
-                        "error": "Неверный день недели",
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
 
             created_plans = []
 
             for agent in Agent.objects.all():
-                planned_stores = getattr(agent, field_name).all()
+                planned_stores = agent.get_stores_for_date(today)
                 planned_count = planned_stores.count()
 
                 visited_stores_count = (

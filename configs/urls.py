@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.shortcuts import redirect
-from django.urls import path
+from django.urls import include, path
 
 admin.site.site_header = "Orimi"
 admin.site.site_title = "Orimi"
@@ -70,4 +70,5 @@ urlpatterns = [
         name="store-id-by-name",
     ),
     path("api/record-daily-plans/", RecordDailyPlansView.as_view(), name="record_daily_plans"),
+    path("", include("django_prometheus.urls")),
 ]

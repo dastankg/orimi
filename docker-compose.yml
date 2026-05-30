@@ -32,8 +32,12 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus_multiproc
     env_file:
       - .env
+    networks:
+      - default
+      - monitoring
 
   nginx:
     image: nginx:alpine
@@ -60,3 +64,7 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  monitoring:
+    external: true

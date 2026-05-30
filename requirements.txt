@@ -13,6 +13,7 @@ click-plugins==1.1.1.2
 click-repl==0.3.0
 django==5.2.3
 django-crontab==0.7.1
+django-prometheus==2.5.0
 django-storages==1.14.6
 djangorestframework==3.16.0
 et-xmlfile==2.0.0
